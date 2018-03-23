@@ -15,7 +15,7 @@ Players who go bankrupt are removed from the game.
 ## 2) Auction phase:
 In this phase, an auction is held for an unknown tech, which will be drawn from DT.
 
-The rules of the auction are as follows. Each player submits a bid (blind of the others) for the new tech. The highest bidder is awarded the tech (adding to their total) and their bid is subtracted from their bankroll. In the case of a tie, the bid is awarded at random between the tied bids. The tech awarded, the winning player and the winning bid are all announced at the point of the award.
+The rules of the auction are as follows. Each player submits a bid (blind of the others) for the new tech. The highest bidder is awarded the tech (adding to their total) and their bid is subtracted from their bankroll. In the case of a tie, the bid is awarded to both tied bids (both players buy the tech at that price). The tech awarded, the winning player and the winning bid are all announced at the point of the award.
 
 Repeated auctions are held until one or more players announce that they will launch.
 
