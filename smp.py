@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy
 
 
@@ -8,6 +9,7 @@ def run_game():
         'Cedric': Human
     }
     game = Game(player_dict)
+
     while len(game.players) > 1:
         game.discovery()
         game.business()
@@ -24,10 +26,10 @@ def run_game():
 
 class Game(object):
 
-    self.players = list()
-    self.public_information = dict()
-    self.base_price = 10
-    self.failure = 0.1
+    players = list()
+    public_information = dict()
+    base_price = 5
+    failure = 0.1
 
     def __init__(self, players):
         for name, kind in players.items():
@@ -50,6 +52,9 @@ class Game(object):
         """
         self.asteroid = Asteroid()
         self.public_information['base_reward'] = self.asteroid.base_reward
+        print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
+        print("New asteroid discovered! Base reward is %d."
+              % self.asteroid.base_reward)
 
     def business(self):
         """
@@ -57,6 +62,7 @@ class Game(object):
             Each player has to buy some tech.
         """
         for player in self.players:
+            print(player.name + " has %d money." % player.bankroll)
             player.buy_tech(self.base_price)
 
     def auction(self):
@@ -69,19 +75,20 @@ class Game(object):
 
         for player in self.players:
             """ allow players to bid with public information """
-            player.bid(self.public_information)
-            bids.append(int(player.bid))
+            bid = player.bid(self.public_information)
+            bids.append(int(bid))
 
         winning_bid = max(bids)
 
         for player in self.players:
             """ winning players awarded tech """
-            if player.bid == winning_bid:
+            #player.display()
+            if player.last_bid == winning_bid:
                 player.buy_tech(winning_bid)
                 winners.append(player.name)
 
         self.public_information['last_winning_bid'] = winning_bid
-        self.public_information['last_winning_players'] = winners
+        self.public_information['last_winning_bidders'] = winners
 
     def launch_race(self):
         """ one player launched, now see who joins """
@@ -102,31 +109,35 @@ class Game(object):
             Determine list of participants.
             """
             if player.launching is True:
+                print(player.name + " is launching.")
                 launchers.append(player)
-                weights.append(float(player.tech)
+                weights.append(float(player.tech))
 
-        disaster = Player()
+        disaster = Player(name="Mission failure")
         disaster.tech = self.failure * sum(weights)
         launchers.append(disaster)
-        weights.append(float(disaster.tech)
-        weights /= sum(weights)
+        weights.append(float(disaster.tech))
+        s = sum(weights)
+        for ix, w in enumerate(weights):
+            weights[ix] = w / s
 
-        winner = numpy.random.choice(launchers, 1, p=weights)
+        winner = numpy.random.choice(launchers, 1, p=weights)[0]
 
+        payoff = self.asteroid.payoff(s)
         for participant in launchers:
             if participant is winner:
-                winner.collect_payoff(self.asteroid.payoff(tech))
+                participant.collect_payoff(payoff)
             else:
-                winner.collect_payoff(0)
+                participant.collect_payoff(0)
 
         self.public_information['last_winning_miner'] = winner.name
+        print(winner.name + " mines the asteroid for %d money!" % payoff)
 
     def is_launching(self):
         for player in self.players:
-            if player.launch is True:
+            if player.launching is True:
                 return True
         return False
-
 
 
 class Player(object):
@@ -136,16 +147,18 @@ class Player(object):
         self.tech = tech
         self.name = name
         self.launching = False
+        self.last_bid = 0
 
     def buy_tech(self, price):
-        tech = int(numpy.log10(numpy.randint(1001)))
+        tech = numpy.random.randint(11)
         self.tech += tech
         self.bankroll -= price
 
     def bid(self, public_information):
         # insert bid and launch trigger logic here
-        self.launch = True
+        self.launching = True
         bid = 0
+        self.last_bid = int(bid)
         return bid
 
     def launch(self, public_information):
@@ -159,11 +172,20 @@ class Player(object):
     def is_bankrupt(self):
         return self.bankroll < 0
 
+    def display(self):
+        print(" - - - - - - - - - - -")
+        print("name: " + self.name)
+        print("tech: %d" % self.tech)
+        print("bankroll: %d" % self.bankroll)
+        print("last_bid: %d" % self.last_bid)
+        print("launching: %r" % self.launching)
+        print(" - - - - - - - - - - -")
+
 
 class Asteroid(object):
 
     def __init__(self):
-        p0 = numpy.random.randint(11)
+        p0 = numpy.random.randint(17)
         self.base_reward = p0
 
     def payoff(self, tech_spend):
@@ -172,16 +194,38 @@ class Asteroid(object):
         where P0, Pu are random ints from uniform distribution 0 <= n <= 10
             and Pt is a function of tech spent
         """
-        pu = numpy.random.randint(11)
-        pt = int(numpy.sqrt(max(0, tech_spend)))
+        pu = numpy.random.randint(14)
+        pt = int(numpy.sqrt(max(0, 1.5 * tech_spend)))
         return self.base_reward + pu + pt
 
 
 class Human(Player):
+
     def bid(self, public_information):
         print('-------------')
-        print(self.name)
+        print(self.name + " up.")
         print(public_information)
-        amount = input("Bid?")
-        self.launch = input("Launch?")
-        return amount
+        print("Your tech: %d" % self.tech)
+        print("Your money: %d" % self.bankroll)
+        amount = input("Enter bid: ")
+        if not amount.isnumeric():
+            amount = 0
+        launch = input("Launch? (Y/N) ")
+        if launch[0].upper() == 'Y':
+            self.launching = True
+        else:
+            self.launching = False
+        self.last_bid = int(amount)
+        return self.last_bid
+
+    def launch(self, public_information):
+        print('-------------')
+        print(self.name + " up.")
+        print(public_information)
+        print("Your tech: %d" % self.tech)
+        print("Your money: %d" % self.bankroll)
+        if self.launching is False:
+            launch = input("Join launch? (Y/N) ")
+            if launch[0].upper() == 'Y':
+                self.launching = True
+
