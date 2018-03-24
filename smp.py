@@ -2,15 +2,18 @@
 import numpy
 
 
-def run_game():
-    player_dict = {
-        'Ati': Human,
-        'Alex': Human,
-        'Cedric': Human
-    }
+def run_game(player_dict=None):
+    if player_dict is None:
+        player_dict = {
+            'Ati': Human,
+            'Alex': Human,
+            'Cedric': Human
+        }
     game = Game(player_dict)
 
+    round = 0
     while len(game.players) > 1:
+        round += 1
         game.discovery()
         game.business()
         while True:
@@ -23,27 +26,37 @@ def run_game():
         game.mission()
         print(game.public_information)
 
+    winner = game.players[0]
+    print(winner.name + " final bankroll after %d rounds: %d" % (round, winner.bankroll))
+
 
 class Game(object):
 
     players = list()
+    loosers = list()
     public_information = dict()
+    initial_bankroll = 1000
     base_price = 5
+    base_tech = 11
+    bid_tech = 11
     failure = 0.1
+    failure_attenuation = 0.98
 
     def __init__(self, players):
         for name, kind in players.items():
             self.add_player(name, kind)
 
-    def add_player(self, name, kind):
-        player = kind(name=name)
+    def add_player(self, name, strategy):
+        player = Player(strategy=strategy(), name=name, bankroll=self.initial_bankroll)
         self.players.append(player)
 
     def remove_bankrupt_players(self):
         for player in self.players:
             if player.is_bankrupt():
                 print(player.name + ' is bankrupt.')
-                self.players.remove(player)
+                self.loosers.append(player)
+        # can't remove from list while iterating it
+        self.players = [p for p in self.players if not p.is_bankrupt()]
 
     def discovery(self):
         """
@@ -63,7 +76,8 @@ class Game(object):
         """
         for player in self.players:
             print(player.name + " has %d money." % player.bankroll)
-            player.buy_tech(self.base_price)
+            tech = numpy.random.randint(self.base_tech)
+            player.buy_tech(tech, self.base_price)
 
     def auction(self):
         """
@@ -84,7 +98,8 @@ class Game(object):
             """ winning players awarded tech """
             #player.display()
             if player.last_bid == winning_bid:
-                player.buy_tech(winning_bid)
+                tech = numpy.random.randint(self.bid_tech)
+                player.buy_tech(tech, winning_bid)
                 winners.append(player.name)
 
         self.public_information['last_winning_bid'] = winning_bid
@@ -115,6 +130,7 @@ class Game(object):
 
         disaster = Player(name="Mission failure")
         disaster.tech = self.failure * sum(weights)
+        self.failure *= self.failure_attenuation    # reduce failure rate over time
         launchers.append(disaster)
         weights.append(float(disaster.tech))
         s = sum(weights)
@@ -140,30 +156,41 @@ class Game(object):
         return False
 
 
+class Strategy:
+
+    def bid(self, public_information):
+        raise Exception("you need to implement a bid strategy!")
+
+    def join_launch(self, public_information):
+        raise Exception("you need to implement a launch strategy!")
+
+
 class Player(object):
 
-    def __init__(self, name=None, bankroll=1000, tech=0):
+    def __init__(self, strategy=Strategy(), name=None, bankroll=1000, tech=0):
+        self.strategy = strategy
         self.bankroll = bankroll
         self.tech = tech
         self.name = name
         self.launching = False
         self.last_bid = 0
+        strategy.name = name
 
-    def buy_tech(self, price):
-        tech = numpy.random.randint(11)
+    def buy_tech(self, tech, price):
         self.tech += tech
         self.bankroll -= price
 
     def bid(self, public_information):
-        # insert bid and launch trigger logic here
-        self.launching = True
-        bid = 0
+        self.share_state()
+        bid, launching = self.strategy.bid(public_information)
+        self.launching = launching
         self.last_bid = int(bid)
         return bid
 
     def launch(self, public_information):
-        # decide whether to launch based on public information
-        self.launching = True
+        if self.launching is False:
+            self.share_state()
+            self.launching = self.strategy.join_launch(public_information)
 
     def collect_payoff(self, payoff):
         self.tech = 0
@@ -171,6 +198,11 @@ class Player(object):
 
     def is_bankrupt(self):
         return self.bankroll < 0
+
+    def share_state(self):
+        # share private player state with strategy object
+        self.strategy.tech = self.tech
+        self.strategy.bankroll = self.bankroll
 
     def display(self):
         print(" - - - - - - - - - - -")
@@ -199,7 +231,8 @@ class Asteroid(object):
         return self.base_reward + pu + pt
 
 
-class Human(Player):
+class Human(Strategy):
+    """Human strategy always asks for input"""
 
     def bid(self, public_information):
         print('-------------')
@@ -212,20 +245,31 @@ class Human(Player):
             amount = 0
         launch = input("Launch? (Y/N) ")
         if launch[0].upper() == 'Y':
-            self.launching = True
+            launching = True
         else:
-            self.launching = False
-        self.last_bid = int(amount)
-        return self.last_bid
+            launching = False
+        return int(amount), launching
 
-    def launch(self, public_information):
+    def join_launch(self, public_information):
         print('-------------')
         print(self.name + " up.")
         print(public_information)
         print("Your tech: %d" % self.tech)
         print("Your money: %d" % self.bankroll)
-        if self.launching is False:
-            launch = input("Join launch? (Y/N) ")
-            if launch[0].upper() == 'Y':
-                self.launching = True
+        launch = input("Join launch? (Y/N) ")
+        if launch[0].upper() == 'Y':
+            return True
+        else:
+            return False
 
+
+class Spongebob(Strategy):
+    """Spongebob always bids and launches based on fixed threshold."""
+
+    def bid(self, public_information):
+        amount = min(self.bankroll, public_information['base_reward'])
+        launching = self.tech>10
+        return int(amount), launching
+
+    def join_launch(self, public_information):
+        return self.tech>15
