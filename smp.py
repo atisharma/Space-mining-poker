@@ -33,7 +33,7 @@ def run_game(player_dict=None):
 class Game(object):
 
     players = list()
-    loosers = list()
+    losers = list()
     public_information = dict()
     initial_bankroll = 1000
     base_price = 5
@@ -54,7 +54,7 @@ class Game(object):
         for player in self.players:
             if player.is_bankrupt():
                 print(player.name + ' is bankrupt.')
-                self.loosers.append(player)
+                self.losers.append(player)
         # can't remove from list while iterating it
         self.players = [p for p in self.players if not p.is_bankrupt()]
 
