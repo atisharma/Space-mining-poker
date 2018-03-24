@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
+
+"""
+Space Mining Poker
+
+A game to illustrate game-theoretic components of commercial space
+exploitation.
+"""
+
+import sys
+import getopt
 import numpy
 
+from strategies import *
 
-def run_game(player_dict=None):
-    if player_dict is None:
-        player_dict = {
-            'Ati': Human,
-            'Alex': Human,
-            'Cedric': Human
-        }
+
+def run_game(player_dict):
+    """
+    Create a game instance and run the game.
+    """
+
     game = Game(player_dict)
 
     round = 0
@@ -156,15 +166,6 @@ class Game(object):
         return False
 
 
-class Strategy:
-
-    def bid(self, public_information):
-        raise Exception("you need to implement a bid strategy!")
-
-    def join_launch(self, public_information):
-        raise Exception("you need to implement a launch strategy!")
-
-
 class Player(object):
 
     def __init__(self, strategy=Strategy(), name=None, bankroll=1000, tech=0):
@@ -231,45 +232,19 @@ class Asteroid(object):
         return self.base_reward + pu + pt
 
 
-class Human(Strategy):
-    """Human strategy always asks for input"""
+def main(argv):
+    if sys.version_info[0] < 3:
+        print("Requires Python 3.")
+        sys.exit(1)
 
-    def bid(self, public_information):
-        print('-------------')
-        print(self.name + " up.")
-        print(public_information)
-        print("Your tech: %d" % self.tech)
-        print("Your money: %d" % self.bankroll)
-        amount = input("Enter bid: ")
-        if not amount.isnumeric():
-            amount = 0
-        launch = input("Launch? (Y/N) ")
-        if launch[0].upper() == 'Y':
-            launching = True
-        else:
-            launching = False
-        return int(amount), launching
-
-    def join_launch(self, public_information):
-        print('-------------')
-        print(self.name + " up.")
-        print(public_information)
-        print("Your tech: %d" % self.tech)
-        print("Your money: %d" % self.bankroll)
-        launch = input("Join launch? (Y/N) ")
-        if launch[0].upper() == 'Y':
-            return True
-        else:
-            return False
+    player_dict = {
+        'Ati': Human,
+        'Alex': Human,
+        'Cedric': Human,
+        'SpongeBob': SpongeBob
+    }
+    run_game(player_dict)
 
 
-class Spongebob(Strategy):
-    """Spongebob always bids and launches based on fixed threshold."""
-
-    def bid(self, public_information):
-        amount = min(self.bankroll, public_information['base_reward'])
-        launching = self.tech>10
-        return int(amount), launching
-
-    def join_launch(self, public_information):
-        return self.tech>15
+if __name__ == "__main__":
+   main(sys.argv[1:])
