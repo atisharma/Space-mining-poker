@@ -1,5 +1,7 @@
 # Space Mining Poker
 
+## Rules
+
 The game is played with N players. Each player has M money and T tech. The M attribute is public, the T attribute is private.
 Each player starts with M=1000 and T=0.
 
@@ -37,6 +39,11 @@ payoff = P0 + Pu + Pt.
 This is all made public information at this point.
 
 Pt is an extraction efficiency reward which can be made proportional to the average tech spent by all players over past 10 rounds.
+
+
+## How to play
+At the moment, it is required to modify the hard-coded player names and types in the main `smp.py` file.
+Network players are named according to their network IP address and port, and will need to separately run `network_player.py` on their machine.
 
 
 ## Possible extensions:
