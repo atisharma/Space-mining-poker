@@ -30,14 +30,14 @@ def run_game(player_dict):
             game.auction()
             game.remove_bankrupt_players()
             if game.is_launching():
-                print('Someone is launching!')
+                game.broadcast('Someone is launching!')
                 game.launch_race()
                 break
         game.mission()
-        print(game.public_information)
+        game.broadcast(game.public_information)
 
     winner = game.players[0]
-    print(winner.name + " final bankroll after %d rounds: %d" % (round, winner.bankroll))
+    game.broadcast(winner.name + " final bankroll after %d rounds: %d" % (round, winner.bankroll))
 
 
 class Game(object):
@@ -55,6 +55,9 @@ class Game(object):
     def __init__(self, players):
         for name, kind in players.items():
             self.add_player(name, kind)
+        self.public_information['last_winning_miner'] = ''
+        self.public_information['last_winning_bid'] = 0
+        self.public_information['last_winning_bidders'] = list()
 
     def add_player(self, name, strategy):
         player = Player(strategy=strategy(), name=name, bankroll=self.initial_bankroll)
@@ -63,7 +66,7 @@ class Game(object):
     def remove_bankrupt_players(self):
         for player in self.players:
             if player.is_bankrupt():
-                print(player.name + ' is bankrupt.')
+                self.broadcast(player.name + ' is bankrupt.')
                 self.losers.append(player)
         # can't remove from list while iterating it
         self.players = [p for p in self.players if not p.is_bankrupt()]
@@ -75,8 +78,8 @@ class Game(object):
         """
         self.asteroid = Asteroid()
         self.public_information['base_reward'] = self.asteroid.base_reward
-        print("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
-        print("New asteroid discovered! Base reward is %d."
+        self.broadcast("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*")
+        self.broadcast("New asteroid discovered! Base reward is %d."
               % self.asteroid.base_reward)
 
     def business(self):
@@ -85,7 +88,7 @@ class Game(object):
             Each player has to buy some tech.
         """
         for player in self.players:
-            print(player.name + " has %d money." % player.bankroll)
+            self.broadcast(player.name + " has %d money." % player.bankroll)
             tech = numpy.random.randint(self.base_tech)
             player.buy_tech(tech, self.base_price)
 
@@ -106,7 +109,7 @@ class Game(object):
 
         for player in self.players:
             """ winning players awarded tech """
-            #player.display()
+            #game.broadcast(player.broadcast())
             if player.last_bid == winning_bid:
                 tech = numpy.random.randint(self.bid_tech)
                 player.buy_tech(tech, winning_bid)
@@ -134,7 +137,7 @@ class Game(object):
             Determine list of participants.
             """
             if player.launching is True:
-                print(player.name + " is launching.")
+                self.broadcast(player.name + " is launching.")
                 launchers.append(player)
                 weights.append(float(player.tech))
 
@@ -157,7 +160,7 @@ class Game(object):
                 participant.collect_payoff(0)
 
         self.public_information['last_winning_miner'] = winner.name
-        print(winner.name + " mines the asteroid for %d money!" % payoff)
+        self.broadcast(winner.name + " mines the asteroid for %d money!" % payoff)
 
     def is_launching(self):
         for player in self.players:
@@ -165,17 +168,25 @@ class Game(object):
                 return True
         return False
 
+    def broadcast(self, message):
+        """
+        Abstraction allowing printing of game messages for each player.
+        """
+        print(message)
+        for player in self.players:
+            player.strategy.broadcast(message)
+
 
 class Player(object):
 
-    def __init__(self, strategy=Strategy(), name=None, bankroll=1000, tech=0):
+    def __init__(self, strategy=Strategy(), name='', bankroll=1000, tech=0):
         self.strategy = strategy
         self.bankroll = bankroll
         self.tech = tech
         self.name = name
         self.launching = False
         self.last_bid = 0
-        strategy.name = name
+        self.strategy.name = name
 
     def buy_tech(self, tech, price):
         self.tech += tech
@@ -206,13 +217,14 @@ class Player(object):
         self.strategy.bankroll = self.bankroll
 
     def display(self):
-        print(" - - - - - - - - - - -")
-        print("name: " + self.name)
-        print("tech: %d" % self.tech)
-        print("bankroll: %d" % self.bankroll)
-        print("last_bid: %d" % self.last_bid)
-        print("launching: %r" % self.launching)
-        print(" - - - - - - - - - - -")
+        disp_str = (" - - - - - - - - - - -") + \
+            ("\nname: " + self.name) + \
+            ("\ntech: %d" % self.tech) + \
+            ("\nbankroll: %d" % self.bankroll) + \
+            ("\nlast_bid: %d" % self.last_bid) + \
+            ("\nlaunching: %r" % self.launching) + \
+            ("\n - - - - - - - - - - -")
+        return disp_str
 
 
 class Asteroid(object):
@@ -238,13 +250,15 @@ def main(argv):
         sys.exit(1)
 
     player_dict = {
-        'Ati': Human,
-        'Alex': Human,
-        'Cedric': Human,
-        'SpongeBob': SpongeBob
+        'Ati@192.168.1.185:49000': NetworkPlayer,
+        'Alex@192.168.1.83:49000': NetworkPlayer,
+        'Cedric': TerminalPlayer,
+        'SpongeBob': SpongeBob,
+        'PassiveLauncher': PassiveLauncher,
     }
     run_game(player_dict)
 
 
 if __name__ == "__main__":
    main(sys.argv[1:])
+
