@@ -56,16 +56,11 @@ class Game(object):
 
     def __init__(self, players):
         """Initialize a new game with the given list of players."""
-        for p in players:
-            self.add_player(p)
+        for name, strategy in players.items():
+            self.players.append(Player(strategy, name))
         self.public_information['last_winning_miner'] = ''
         self.public_information['last_winning_bid'] = 0
         self.public_information['last_winning_bidders'] = list()
-
-    def add_player(self, player):
-        player.bankroll = self.initial_bankroll
-        player.tech =self.initial_tech
-        self.players.append(player)
 
     def remove_bankrupt_players(self):
         for player in self.players:
@@ -144,7 +139,7 @@ class Game(object):
                 launchers.append(player)
                 weights.append(float(player.tech))
 
-        disaster = Player(name="Mission failure")
+        disaster = Player(strategy=None, name="Mission failure")
         disaster.tech = self.failure * sum(weights)
         self.failure *= self.failure_attenuation    # reduce failure rate over time
         launchers.append(disaster)
@@ -202,14 +197,14 @@ def main(argv):
         print("Requires Python 3.")
         sys.exit(1)
 
-    player_list = [
-        NetworkPlayer('Ati@localhost:49000'),
-        NetworkPlayer('Alex@localhost:49001'),
-        LocalPlayer(Terminal(), 'Cedric'),
-        LocalPlayer(SpongeBob(), 'SpongeBob'),
-        LocalPlayer(PassiveLauncher(), 'PassiveLauncher')
-    ]
-    run_game(player_list)
+    player_dict = {
+        'Ati' : 'localhost:49000',
+        'Alex' : 'localhost:49001',
+        'Cedric' : Terminal(),
+        'SpongeBob' : SpongeBob(),
+        'PassiveLauncher' : PassiveLauncher()
+    }
+    run_game(player_dict)
 
 
 if __name__ == "__main__":

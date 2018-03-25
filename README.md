@@ -42,9 +42,13 @@ Pt is an extraction efficiency reward which can be made proportional to the aver
 
 
 ## How to play
-At the moment, it is required to modify the hard-coded player names and types in the main `smp.py` file.
-Network players are named according to their network IP address and port, and will need to separately run `network_player.py` on their machine.
+At the moment, it is required to modify the hard-coded player names and strategies in the main `smp.py` file.
+Network players use their network name/IP address and port as a string instead of a strategy, and will need
+to separately run `strategy_server.py` with the port to use (or an offset to the base port 49000) as the
+command line argument on their machine. Network players can set their strategy by editing
+`strategy_server.py` accordingly.
 
 
 ## Possible extensions:
 - Borrowing money at interest (payable per turn).
+- Limit number of bidding rounds but reveal more information about asteroid in each round (similar to flop&river)
