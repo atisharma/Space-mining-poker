@@ -12,6 +12,7 @@ import getopt
 import numpy
 
 from strategies import *
+from players import *
 
 
 def run_game(player_dict):
@@ -46,6 +47,7 @@ class Game(object):
     losers = list()
     public_information = dict()
     initial_bankroll = 1000
+    initial_tech = 0
     base_price = 5
     base_tech = 11
     bid_tech = 11
@@ -53,15 +55,12 @@ class Game(object):
     failure_attenuation = 0.98
 
     def __init__(self, players):
-        for name, kind in players.items():
-            self.add_player(name, kind)
+        """Initialize a new game with the given list of players."""
+        for name, strategy in players.items():
+            self.players.append(Player(strategy, name))
         self.public_information['last_winning_miner'] = ''
         self.public_information['last_winning_bid'] = 0
         self.public_information['last_winning_bidders'] = list()
-
-    def add_player(self, name, strategy):
-        player = Player(strategy=strategy(), name=name, bankroll=self.initial_bankroll)
-        self.players.append(player)
 
     def remove_bankrupt_players(self):
         for player in self.players:
@@ -109,7 +108,6 @@ class Game(object):
 
         for player in self.players:
             """ winning players awarded tech """
-            #game.broadcast(player.broadcast())
             if player.last_bid == winning_bid:
                 tech = numpy.random.randint(self.bid_tech)
                 player.buy_tech(tech, winning_bid)
@@ -141,7 +139,7 @@ class Game(object):
                 launchers.append(player)
                 weights.append(float(player.tech))
 
-        disaster = Player(name="Mission failure")
+        disaster = Player(strategy=None, name="Mission failure")
         disaster.tech = self.failure * sum(weights)
         self.failure *= self.failure_attenuation    # reduce failure rate over time
         launchers.append(disaster)
@@ -174,57 +172,7 @@ class Game(object):
         """
         print(message)
         for player in self.players:
-            player.strategy.broadcast(message)
-
-
-class Player(object):
-
-    def __init__(self, strategy=Strategy(), name='', bankroll=1000, tech=0):
-        self.strategy = strategy
-        self.bankroll = bankroll
-        self.tech = tech
-        self.name = name
-        self.launching = False
-        self.last_bid = 0
-        self.strategy.name = name
-
-    def buy_tech(self, tech, price):
-        self.tech += tech
-        self.bankroll -= price
-
-    def bid(self, public_information):
-        self.share_state()
-        bid, launching = self.strategy.bid(public_information)
-        self.launching = launching
-        self.last_bid = int(bid)
-        return bid
-
-    def launch(self, public_information):
-        if self.launching is False:
-            self.share_state()
-            self.launching = self.strategy.join_launch(public_information)
-
-    def collect_payoff(self, payoff):
-        self.tech = 0
-        self.bankroll += payoff
-
-    def is_bankrupt(self):
-        return self.bankroll < 0
-
-    def share_state(self):
-        # share private player state with strategy object
-        self.strategy.tech = self.tech
-        self.strategy.bankroll = self.bankroll
-
-    def display(self):
-        disp_str = (" - - - - - - - - - - -") + \
-            ("\nname: " + self.name) + \
-            ("\ntech: %d" % self.tech) + \
-            ("\nbankroll: %d" % self.bankroll) + \
-            ("\nlast_bid: %d" % self.last_bid) + \
-            ("\nlaunching: %r" % self.launching) + \
-            ("\n - - - - - - - - - - -")
-        return disp_str
+            player.broadcast(message)
 
 
 class Asteroid(object):
@@ -250,11 +198,11 @@ def main(argv):
         sys.exit(1)
 
     player_dict = {
-        'Ati@192.168.1.185:49000': NetworkPlayer,
-        'Alex@192.168.1.83:49000': NetworkPlayer,
-        'Cedric': TerminalPlayer,
-        'SpongeBob': SpongeBob,
-        'PassiveLauncher': PassiveLauncher,
+        'Ati' : 'localhost:49000',
+        'Alex' : 'localhost:49001',
+        'Cedric' : Terminal(),
+        'SpongeBob' : SpongeBob(),
+        'PassiveLauncher' : PassiveLauncher()
     }
     run_game(player_dict)
 
