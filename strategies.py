@@ -115,16 +115,6 @@ class Observer(Strategy):
     def join_launch(self, private_information, public_information):
         return False
 
-    def new_asteroid(self, private_information, public_information):
-        """A new asteroid has been discovered. """
-        pass
-
-    def auction_finished(self, private_information, public_information):
-        pass
-
-    def asteroid_mined(self, private_information, public_information):
-        pass
-
 
 class AggressiveLauncher(Strategy):
     """
