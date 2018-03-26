@@ -5,7 +5,6 @@ All different player types are implemented here.
 """
 
 import xmlrpc.client
-from strategies import *
 
 
 class Player(object):

@@ -8,11 +8,9 @@ exploitation.
 """
 
 import sys
-import getopt
 import numpy
 
-from strategies import *
-from players import *
+from players import Player
 
 
 def run_game(player_dict):
@@ -25,6 +23,8 @@ def run_game(player_dict):
     round = 0
     while len(game.players) > 1:
         round += 1
+        game.report()
+        game.broadcast(game.public_information)
         game.discovery()
         game.business()
         while True:
@@ -35,9 +35,10 @@ def run_game(player_dict):
                 game.launch_race()
                 break
         game.mission()
-        game.broadcast(game.public_information)
 
     winner = game.players[0]
+    game.report()
+    game.broadcast(game.public_information)
     game.broadcast(winner.name + " final bankroll after %d rounds: %d" % (round, winner.bankroll))
 
 
@@ -61,6 +62,9 @@ class Game(object):
         self.public_information['last_winning_miner'] = ''
         self.public_information['last_winning_bid'] = 0
         self.public_information['last_winning_bidders'] = list()
+        self.public_information['players'] = dict()
+        for player in self.players:
+            self.public_information['players'][player.name] = dict()
 
     def remove_bankrupt_players(self):
         for player in self.players:
@@ -166,6 +170,13 @@ class Game(object):
                 return True
         return False
 
+    def report(self):
+        """
+        Populate public_information with what players should know.
+        """
+        for player in self.players:
+            self.public_information['players'][player.name]['bankroll'] = player.bankroll
+
     def broadcast(self, message):
         """
         Abstraction allowing printing of game messages for each player.
@@ -197,16 +208,10 @@ def main(argv):
         print("Requires Python 3.")
         sys.exit(1)
 
-    player_dict = {
-        'Ati' : 'localhost:49000',
-        'Alex' : 'localhost:49001',
-        'Cedric' : Terminal(),
-        'SpongeBob' : SpongeBob(),
-        'PassiveLauncher' : PassiveLauncher()
-    }
+    from players_rc import player_dict
     run_game(player_dict)
 
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
 

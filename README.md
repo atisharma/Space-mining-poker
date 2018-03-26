@@ -32,17 +32,16 @@ p(player n wins) = Tn / (sum(Ti) + F).
 
 F plays the role of allowing the possibility of no winner where the asteroid is not successfully mined. F can be modelled to reduce over repeated games.
 
-### 4) Reward phase:
 The payoff to the winning player for mining the asteroid is
 
 payoff = P0 + Pu + Pt.
 This is all made public information at this point.
 
-Pt is an extraction efficiency reward which can be made proportional to the average tech spent by all players over past 10 rounds.
+Pt is an extraction efficiency reward which depends on the average tech spent by all players over past 10 rounds.
 
 
 ## How to play
-At the moment, it is required to modify the hard-coded player names and strategies in the main `smp.py` file.
+At the moment, it is required to modify the player names and strategies in the `players_rc.py` file.
 Network players use their network name/IP address and port as a string instead of a strategy, and will need
 to separately run `strategy_server.py` with the port to use (or an offset to the base port 49000) as the
 command line argument on their machine. Network players can set their strategy by editing
@@ -51,4 +50,4 @@ command line argument on their machine. Network players can set their strategy b
 
 ## Possible extensions:
 - Borrowing money at interest (payable per turn).
-- Limit number of bidding rounds but reveal more information about asteroid in each round (similar to flop&river)
+- Limit number of bidding rounds but reveal more information about asteroid in each round (similar to flop & river in poker).
