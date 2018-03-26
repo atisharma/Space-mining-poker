@@ -69,7 +69,7 @@ class SpongeBob(Strategy):
     def bid(self, private_information, public_information):
         amount = min(private_information['bankroll'], public_information['base_reward'])
         launching = private_information['tech'] > 10
-        return int(amount), launching
+        return amount, launching
 
     def join_launch(self, private_information, public_information):
         return private_information['tech'] > 15
@@ -101,6 +101,19 @@ class PassiveLauncher(Strategy):
 
     def join_launch(self, private_information, public_information):
         return True
+
+
+class Observer(Strategy):
+    """
+        Observer never joins the game but records all public information coming its way.
+        It's not suitable for recording the full game as eventually it will run out of money.
+        """
+    
+    def bid(self, private_information, public_information):
+        return 0, False
+    
+    def join_launch(self, private_information, public_information):
+        return False
 
 
 class AggressiveLauncher(Strategy):
@@ -141,3 +154,4 @@ class EVBot(Strategy):
 
     def join_launch(self, private_information, public_information):
         return False
+
