@@ -7,8 +7,8 @@ from strategies import *
 # Define players here.
 
 player_dict = {
-    #'Ati' : 'localhost:49000',
-    #'Alex' : 'localhost:49001',
+    'Ati' : 'localhost:49000',
+    'Alex' : 'localhost:49001',
     #'Cedric' : Terminal(),
     'SpongeBob' : SpongeBob(),
     'PassiveLauncher' : PassiveLauncher(),

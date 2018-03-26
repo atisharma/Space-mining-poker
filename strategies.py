@@ -23,6 +23,9 @@ class Strategy(object):
         # assume bot, so no messages necessary
         pass
 
+    def ping(self):
+        return True
+
 
 class Terminal(Strategy):
     """
