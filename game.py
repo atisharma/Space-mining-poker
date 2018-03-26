@@ -43,6 +43,7 @@ class Game(object):
     round = 0
     public_information = dict(      # populate keys just so we have a list of all of them, values added during game play
         'round': None,
+        'players': None,
         'last_winning_bid': None,
         'last_winning_bidders': None,
         'auction_round': None,
@@ -57,6 +58,9 @@ class Game(object):
         self.public_information['last_winning_miner'] = ''
         self.public_information['last_winning_bid'] = 0
         self.public_information['last_winning_bidders'] = list()
+        self.public_information['players'] = dict()
+        for player in self.players:
+            self.public_information['players'][player.name] = dict()
 
     def remove_bankrupt_players(self):
         for player in self.players:
@@ -95,6 +99,7 @@ class Game(object):
         bids = list()
         winners = list()
 
+        self.report()
         for player in self.players:
             """ allow players to bid with public information """
             bid = player.bid(self.public_information)
@@ -103,7 +108,7 @@ class Game(object):
         winning_bid = max(bids)
 
         for player in self.players:
-            """ winning players awarded same tech each """
+            """ winning players awarded *same* tech each """
             tech = numpy.random.randint(self.AUCTION_TECH)
             if player.last_bid == winning_bid:
                 player.buy_tech(tech, winning_bid)
@@ -114,6 +119,7 @@ class Game(object):
 
     def launch_race(self):
         """ one player launched, now see who joins """
+        self.report()
         for player in self.players:
             player.launch(self.public_information)
 
@@ -163,6 +169,13 @@ class Game(object):
                 return True
         return False
 
+    def report(self):
+        """
+        Populate public_information with what players should know.
+        """
+        for player in self.players:
+            self.public_information['players'][player.name]['bankroll'] = player.bankroll
+
     def broadcast(self, message):
         """
         Abstraction allowing printing of game messages for each player.
@@ -175,7 +188,6 @@ class Game(object):
         """
         Run the game and return the winning player (if any).
         """
-
         self.round = 0
         while len(self.players) > 1:
             self.round += 1
@@ -184,11 +196,16 @@ class Game(object):
             self.business()
             self.remove_bankrupt_players()
             if len(self.players) > 1:
+                auction_round = 0
                 while True:
+                    auction_round += 1
+                    self.public_information['auction_round'] = auction_round
                     self.auction()
+                    self.remove_bankrupt_players()
                     if self.is_launching():
                         self.launch_race()
                         break
+                self.public_information['auction_round'] = None
                 self.mission()
 
         winner = None   # in principle all players can currently go bankrupt, so no winner is a possibility

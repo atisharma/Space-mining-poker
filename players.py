@@ -5,7 +5,6 @@ All different player types are implemented here.
 """
 
 import xmlrpc.client
-from strategies import *
 
 
 class Player(object):
@@ -47,7 +46,6 @@ class Player(object):
 
     def bid(self, public_information):
         private_information = self._get_private_information()
-        bid = 0
         launching = False
 
         try:
@@ -55,9 +53,14 @@ class Player(object):
         except xmlrpc.client.Fault as err:
             self._rpc_error(err)
 
-        self.last_bid = min(self.bankroll, int(bid))    # bids are automatically capped at available cash? Or do we allow risky bidding at the hope that I win auction and can pay back debt?
-        self.launching = launching and self.tech > 0    # you must have at least some tech to launch?
-        return int(bid)
+        try:
+            bid = int(bid)
+        except:
+            bid = 0
+
+        self.last_bid = bid
+        self.launching = launching and self.tech > 0    # you must have at least some tech to launch
+        return bid
 
     def launch(self, public_information):
         if self.launching is True:

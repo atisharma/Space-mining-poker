@@ -8,7 +8,6 @@ strategy.name is the IP address.
 import socket
 import sys
 from xmlrpc.server import SimpleXMLRPCServer
-import logging
 
 from strategies import *
 

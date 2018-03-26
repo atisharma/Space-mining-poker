@@ -6,6 +6,9 @@ Put all strategies in here and import into main file.
 A strategy needs to implement .bid() and .join_launch() methods.
 """
 
+import numpy
+
+
 class Strategy(object):
     """
     Template strategy, which specific strategies inherit.
@@ -121,4 +124,44 @@ class Observer(Strategy):
 
     def asteroid_mined(self, private_information, public_information):
         pass
+
+
+class AggressiveLauncher(Strategy):
+    """
+    AggressiveLauncher always high bids and launches.
+    """
+
+    def bid(self, private_information, public_information):
+        amount = min(private_information['bankroll'],
+                     2 * public_information['last_winning_bid'])
+        launching = True
+        return int(amount), launching
+
+    def join_launch(self, private_information, public_information):
+        return False
+
+
+class EVBot(Strategy):
+    """
+    EVBot sometimes bids and launches based on simple calculations of profitability.
+    """
+
+    def bid(self, private_information, public_information):
+        launching = False
+        # bid cheaper than base tech price
+        amount = min(private_information['bankroll'], 2)
+        # guess ev of launch
+        # assume nobody carries over tech from previous round
+        N = len(public_information['players'])
+        p_win = max((private_information['tech'] / 10.0) ** N, 1.0)
+        payoff = public_information['base_reward'] + 8 + numpy.sqrt(1.5 * 7 * N)
+        ev = p_win * payoff
+        # don't know why launching = (ev > 7) doesn't work?!
+        if ev > 7:
+            launching = True
+        #print(N, private_information['tech'], payoff, p_win, ev, launching)
+        return int(amount), launching
+
+    def join_launch(self, private_information, public_information):
+        return False
 

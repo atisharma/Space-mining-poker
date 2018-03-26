@@ -7,19 +7,12 @@ A game to illustrate game-theoretic components of commercial space
 exploitation.
 """
 
-
 def main(argv):
     if sys.version_info[0] < 3:
         print("Requires Python 3.")
         sys.exit(1)
 
-    player_dict = {
-        'Ati' : 'localhost:49000',
-        'Alex' : 'localhost:49001',
-        'Cedric' : Terminal(),
-        'SpongeBob' : SpongeBob(),
-        'PassiveLauncher' : PassiveLauncher()
-    }
+    from players_rc import player_dict
     game = Game(player_dict)
     winner = game.run()
     if winner is None:
