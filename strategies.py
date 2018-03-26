@@ -99,3 +99,26 @@ class PassiveLauncher(Strategy):
     def join_launch(self, private_information, public_information):
         return True
 
+
+class Observer(Strategy):
+    """
+        Observer never joins the game but records all public information coming its way.
+        It's not suitable for recording the full game as eventually it will run out of money.
+        """
+    
+    def bid(self, private_information, public_information):
+        return 0, False
+    
+    def join_launch(self, private_information, public_information):
+        return False
+
+    def new_asteroid(self, private_information, public_information):
+        """A new asteroid has been discovered. """
+        pass
+
+    def auction_finished(self, private_information, public_information):
+        pass
+
+    def asteroid_mined(self, private_information, public_information):
+        pass
+
