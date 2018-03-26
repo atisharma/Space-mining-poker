@@ -69,7 +69,7 @@ class SpongeBob(Strategy):
     def bid(self, private_information, public_information):
         amount = min(private_information['bankroll'], public_information['base_reward'])
         launching = private_information['tech'] > 10
-        return int(amount), launching
+        return amount, launching
 
     def join_launch(self, private_information, public_information):
         return private_information['tech'] > 15

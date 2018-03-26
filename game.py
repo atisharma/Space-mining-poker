@@ -13,7 +13,7 @@ from players import *
 class Asteroid(object):
     
     def __init__(self):
-        p0 = numpy.random.randint(17)
+        p0 = int(numpy.random.lognormal() * 7)
         self.base_reward = p0
     
     def payoff(self, tech_spend):
@@ -22,7 +22,7 @@ class Asteroid(object):
         where P0, Pu are random ints from uniform distribution 0 <= n <= 10
         and Pt is a function of tech spent
         """
-        pu = numpy.random.randint(14)
+        pu = int(numpy.random.lognormal() * 7)
         pt = int(numpy.sqrt(max(0, 1.5 * tech_spend)))
         return self.base_reward + pu + pt
 
@@ -37,11 +37,12 @@ class Game(object):
     AUCTION_TECH = 11
     FAILURE_RATE = 0.1
     FAILURE_RATE_ATTENUATION = 0.98
+    LAUNCH_COST = 5
 
     players = list()
     losers = list()
     round = 0
-    public_information = dict(      # populate keys just so we have a list of all of them, values added during game play
+    public_information = {      # populate keys just so we have a list of all of them, values added during game play
         'round': None,
         'players': None,
         'last_winning_bid': None,
@@ -49,7 +50,7 @@ class Game(object):
         'auction_round': None,
         'last_winning_miner': None,
         'last_mining_payoff': None,
-    )
+    }
 
     def __init__(self, players):
         """Initialize a new game with the given list of players."""
@@ -65,10 +66,22 @@ class Game(object):
     def remove_bankrupt_players(self):
         for player in self.players:
             if player.is_bankrupt():
-                self.broadcast(player.name + ' is bankrupt.')
+                self.broadcast(player.name + ' is bankrupt in round {}.'.format(self.round))
                 self.losers.append(player)
         # can't remove from list while iterating it
         self.players = [p for p in self.players if not p.is_bankrupt()]
+
+    def next_round(self):
+        """Start the next round of the game."""
+        self.round += 1
+        self.public_information['round'] = self.round
+        for player in self.players:
+            player.next_round()
+
+    def keep_player_logs(self):
+        """Keep a log of all player moves by opening a log file for each player"""
+        for p in self.players:
+            p.open_statistics_file()
 
     def discovery(self):
         """
@@ -140,10 +153,10 @@ class Game(object):
                 self.broadcast(player.name + " is launching.")
                 launchers.append(player)
                 weights.append(float(player.tech))
+                player.bankroll -= self.LAUNCH_COST
 
         disaster = Player(strategy=None, name="Mission failure")
-        disaster.tech = self.failure * sum(weights)
-        self.failure *= self.failure_attenuation    # reduce failure rate over time
+        disaster.tech = self.FAILURE_RATE_ATTENUATION**self.round * self.FAILURE_RATE * sum(weights)
         launchers.append(disaster)
         weights.append(float(disaster.tech))
         s = sum(weights)
@@ -184,14 +197,14 @@ class Game(object):
         for player in self.players:
             player.broadcast(message)
 
-    def run(self):
+    def run(self, max_rounds=1000):
         """
-        Run the game and return the winning player (if any).
+        Run the game and return the surviving (winning) players.
+        If positive, plays at most max_rounds rounds.
         """
         self.round = 0
-        while len(self.players) > 1:
-            self.round += 1
-            self.public_information['round'] = self.round
+        while len(self.players) > 1 and (max_rounds == 0 or self.round <= max_rounds):
+            self.next_round()
             self.discovery()
             self.business()
             self.remove_bankrupt_players()
@@ -208,7 +221,11 @@ class Game(object):
                 self.public_information['auction_round'] = None
                 self.mission()
 
-        winner = None   # in principle all players can currently go bankrupt, so no winner is a possibility
-        if len(self.players) == 1:
-            winner = self.players[0]
-        return winner
+        return self.players
+
+
+    def show_statistics(self):
+        """
+        Print some statistics after a game
+        """
+        pass

@@ -30,6 +30,7 @@ class Player(object):
         self.name = name
         self.launching = False
         self.last_bid = 0
+        self.stats_file = False
 
     def _get_private_information(self):
         return {
@@ -43,6 +44,11 @@ class Player(object):
               " at URL " + self.url)
         print("Fault code: %d" % err.faultCode)
         print("Fault string: %s" % err.faultString)
+
+    def open_statistics_file(self):
+        if self.stats_file:
+            self.stats_file.close()
+        self.stats_file = open(self.name+'.log', 'w')
 
     def bid(self, public_information):
         private_information = self._get_private_information()
@@ -59,18 +65,26 @@ class Player(object):
             bid = 0
 
         self.last_bid = bid
-        self.launching = launching and self.tech > 0    # you must have at least some tech to launch
+        self.launching = bool(launching) and self.tech > 0    # you must have at least some tech to launch
+        if self.stats_file:
+            self.stats_file.write("bid: {} {}\n".format(bid, launching))
         return bid
 
     def launch(self, public_information):
         if self.launching is True:
+            if self.stats_file:
+                self.stats_file.write("launching: {}\n".format(self.launching))
             return
         private_information = self._get_private_information()
-
+        launching = False
         try:
-            self.launching = self.strategy.join_launch(private_information, public_information)
+            launching = self.strategy.join_launch(private_information, public_information)
         except xmlrpc.client.Fault as err:
             self._rpc_error(err)
+
+        self.launching = bool(launching)
+        if self.stats_file:
+            self.stats_file.write("launching: {}\n".format(self.launching))
 
     def broadcast(self, message):
         try:
@@ -78,13 +92,21 @@ class Player(object):
         except xmlrpc.client.Fault as err:
             self._rpc_error(err)
 
+    def next_round(self):
+        if self.stats_file:
+            self.stats_file.write("nextround: {} {}\n".format(self.tech, self.bankroll))
+
     def buy_tech(self, tech, price):
         self.tech += tech
         self.bankroll -= price
+        if self.stats_file:
+            self.stats_file.write("buy: {} {}\n".format(tech, price))
 
     def collect_payoff(self, payoff):
         self.tech = 0
         self.bankroll += payoff
+        if self.stats_file:
+            self.stats_file.write("payoff: {}\n".format(payoff))
 
     def is_bankrupt(self):
         return self.bankroll < 0
