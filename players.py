@@ -46,7 +46,6 @@ class Player(object):
 
     def bid(self, public_information):
         private_information = self._get_private_information()
-        bid = 0
         launching = False
 
         try:
@@ -54,7 +53,12 @@ class Player(object):
         except xmlrpc.client.Fault as err:
             self._rpc_error(err)
 
-        self.last_bid = int(bid)
+        try:
+            bid = int(bid)
+        except:
+            bid = 0
+
+        self.last_bid = bid
         self.launching = launching
         return bid
 

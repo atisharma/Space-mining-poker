@@ -141,7 +141,7 @@ class Game(object):
             if player.launching is True:
                 self.broadcast(player.name + " is launching.")
                 launchers.append(player)
-                weights.append(float(player.tech))
+                weights.append(float(player.tech + 0.001))
 
         disaster = Player(strategy=None, name="Mission failure")
         disaster.tech = self.failure * sum(weights)

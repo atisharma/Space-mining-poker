@@ -7,9 +7,13 @@ from strategies import *
 # Define players here.
 
 player_dict = {
-    'Ati' : 'localhost:49000',
-    'Alex' : 'localhost:49001',
-    'Cedric' : Terminal(),
+    #'Ati' : 'localhost:49000',
+    #'Alex' : 'localhost:49001',
+    #'Cedric' : Terminal(),
+    'SpongeBob2' : SpongeBob(),
+    'PassiveLauncher2' : PassiveLauncher(),
     'SpongeBob' : SpongeBob(),
-    'PassiveLauncher' : PassiveLauncher()
+    'PassiveLauncher' : PassiveLauncher(),
+    'AlwaysLauncher' : AlwaysLaunch(),
+    'CleverBot' : CleverBot(),
 }

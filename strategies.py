@@ -99,3 +99,20 @@ class PassiveLauncher(Strategy):
     def join_launch(self, private_information, public_information):
         return True
 
+
+class CleverBot(Strategy):
+    """
+    CleverBot sometimes bids and launches based on profitability.
+    """
+
+    def bid(self, private_information, public_information):
+        amount = min(private_information['bankroll'],
+                     public_information['base_reward'],
+                     public_information['last_winning_bid'] + 1,
+                    )
+        launching = public_information['base_reward'] * 2 > private_information['tech']
+        return int(amount), launching
+
+    def join_launch(self, private_information, public_information):
+        launching = public_information['base_reward'] * 2 > private_information['tech']
+        return launching
