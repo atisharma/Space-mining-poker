@@ -17,7 +17,6 @@ def main(argv):
 
     from players_rc import player_dict
     game = Game(player_dict)
-    game.keep_player_logs()     # will help students
     winners = game.run()
     if len(winners) == 0:
         game.broadcast("All players went bankrupt")

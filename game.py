@@ -82,11 +82,6 @@ class Game(object):
         for player in self.players:
             player.next_round()
 
-    def keep_player_logs(self):
-        """Keep a log of all player moves by opening a log file for each player"""
-        for p in self.players:
-            p.open_statistics_file()
-
     def discovery(self):
         """
         Discovery phase:
