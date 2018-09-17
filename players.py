@@ -7,7 +7,8 @@ All different player types are implemented here.
 import xmlrpc.client
 import json
 import os
-
+from time import strftime
+import pathlib
 
 class Player(object):
     """Player class for all players. Implements book-keeping, bidding and
@@ -26,7 +27,9 @@ class Player(object):
         self.name = name
         self.launching = False
         self.last_bid = 0
-        self.stats_file = self.name + '.log'
+        logpath = str(pathlib.Path.home()) + '/logs/' + self.name
+        pathlib.Path(logpath).mkdir(parents=True, exist_ok=True)
+        self.stats_file = logpath + '/' + strftime("%Y-%m-%d %H:%M") + '.log'
         try:
             os.remove(self.stats_file)
         except:
