@@ -34,6 +34,8 @@ class Player(object):
             os.remove(self.stats_file)
         except:
             pass
+        with open(self.stats_file, 'w') as stats_file:
+            stats_file.write('[]\n')
         if isinstance(strategy, str):
             try:
                 # this player uses a remote strategy via RPC using this server
@@ -64,11 +66,17 @@ class Player(object):
 
     def write_statistics(self, public_information=None):
         if self.stats_file:
-            with open(self.stats_file, 'a') as stats_file:
-                information = {'private': self._get_private_information(),
-                               'public': public_information}
-                stats_file.write(json.dumps(information))
-                stats_file.write('\n')
+            information = {'private': self._get_private_information(),
+               'public': public_information}
+            with open(self.stats_file, mode='r+', encoding='utf-8') as stats_file:
+               stats_file.seek(0, os.SEEK_END)
+               position = stats_file.tell() - 2
+               stats_file.seek(position)
+               if position < 3:
+                   stats_file.write("\n{}]\n".format(json.dumps(information)))
+               else:
+                   stats_file.write(",\n{}]\n".format(json.dumps(information)))
+               #stats_file.close()
 
     def bid(self, public_information):
         private_information = self._get_private_information()
