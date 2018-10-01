@@ -4,6 +4,11 @@ strategies.py
 Put all strategies in here and import into main file.
 
 A strategy needs to implement .bid() and .join_launch() methods.
+
+Optional methods are .begin() and .end() called at the start and
+end of a game (or bankruptcy of the player), respectively, as
+well as .broadcast(), which receives human readable messages
+about the game's progress.
 """
 
 import numpy
@@ -18,6 +23,12 @@ class Strategy(object):
 
     def join_launch(self, private_information, public_information):
         raise Exception("you need to implement a launch strategy!")
+
+    def begin(self, private_information, public_information):
+        pass
+
+    def end(self, private_information, public_information):
+        pass
 
     def broadcast(self, message):
         # assume bot, so no messages necessary

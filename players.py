@@ -63,6 +63,7 @@ class Player(object):
               " at URL " + self.url)
         print("Fault code: %d" % err.faultCode)
         print("Fault string: %s" % err.faultString)
+        self.remove_player()
 
     def write_statistics(self, public_information=None):
         if self.stats_file:
@@ -77,6 +78,26 @@ class Player(object):
                else:
                    stats_file.write(",\n{}]\n".format(json.dumps(information)))
                #stats_file.close()
+
+    def begin(self, public_information):
+        private_information = self._get_private_information()
+
+        try:
+            self.strategy.begin(private_information, public_information)
+        except xmlrpc.client.Fault as err:
+            self._rpc_error(err)
+        except:
+            self.remove_player()
+
+    def end(self, public_information):
+        private_information = self._get_private_information()
+
+        try:
+            self.strategy.end(private_information, public_information)
+        except xmlrpc.client.Fault as err:
+            self._rpc_error(err)
+        except:
+            self.remove_player()
 
     def bid(self, public_information):
         private_information = self._get_private_information()

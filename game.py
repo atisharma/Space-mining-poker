@@ -68,10 +68,12 @@ class Game(object):
             self.public_information['players'][player.name] = dict()
 
     def remove_bankrupt_players(self):
+        self.report()
         for player in self.players:
             if player.is_bankrupt():
                 self.broadcast(player.name + ' is bankrupt in round {}.'.format(self.round))
                 self.losers.append(player)
+                player.end(self.public_information)
         # can't remove from list while iterating it
         self.players = [p for p in self.players if not p.is_bankrupt()]
 
@@ -196,12 +198,15 @@ class Game(object):
         for player in self.players:
             player.broadcast(message)
 
-    def run(self, max_rounds=1000):
+    def run(self, max_rounds=200):
         """
         Run the game and return the surviving (winning) players.
         If positive, plays at most max_rounds rounds.
         """
         self.round = 0
+        self.report()
+        for player in self.players:
+            player.begin(self.public_information)
         while len(self.players) > 1 and (max_rounds == 0 or self.round <= max_rounds):
             self.next_round()
             self.discovery()
@@ -219,6 +224,9 @@ class Game(object):
                         break
                 self.public_information['auction_round'] = None
                 self.mission()
+        self.report()
+        for player in self.players:
+            player.end(self.public_information)
 
         return self.players
 

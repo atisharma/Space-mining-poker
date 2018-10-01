@@ -21,8 +21,11 @@ def main(argv):
     if len(winners) == 0:
         game.broadcast("All players went bankrupt")
     else:
+        top = winners[0]
         for winner in winners:
             game.broadcast("After {} rounds player {} has a bankroll of {}.".format(game.round, winner.name, winner.bankroll))
+            if winner.bankroll > top.bankroll: top = winner
+        game.broadcast("Top player at end of game: {}".format(top.name))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
