@@ -29,7 +29,7 @@ class Player(object):
         self.last_bid = 0
         logpath = str(pathlib.Path.home()) + '/logs/' + self.name
         pathlib.Path(logpath).mkdir(parents=True, exist_ok=True)
-        self.stats_file = logpath + '/' + strftime("%Y-%m-%d %H:%M") + '.log'
+        self.stats_file = logpath + '/' + strftime("%Y-%m-%d") + '.log'
         try:
             os.remove(self.stats_file)
         except:
